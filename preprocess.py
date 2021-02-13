@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 import pandas as pd
-
+from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 import config as config
 
@@ -35,3 +35,21 @@ class HarDataset(Dataset):
         action = self.labels.iloc[idx].item()-1
         sample = {'features': features, 'action': action}
         return sample
+
+    def normalize(self):
+        df = self.features
+        scaled_features = StandardScaler().fit_transform(df.values)
+        self.features = pd.DataFrame(scaled_features, index=df.index, columns=df.columns)
+
+
+    def get_train_x(self):
+        return self.train_x.to_numpy()
+
+    def get_train_y(self):
+        return self.train_y.to_numpy().flatten()
+
+    def get_test_x(self):
+        return self.test_x.to_numpy()
+
+    def get_test_y(self):
+        return self.test_y.to_numpy().flatten()

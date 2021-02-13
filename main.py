@@ -87,7 +87,7 @@ def train_model(model, dataloader, criterion, optimizer):
 
                 print(dataset_name + 'Accuracy: %d %%' % (
                         100 * correct / total))
-
+        return model
 
 
 if __name__ == "__main__":
@@ -105,6 +105,10 @@ if __name__ == "__main__":
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     # optimizer = torch.optim.SGD(model.parameters(), lr=config.learning_rate, momentum=0.9)
-    train_model(model, dataloader, criterion, optimizer)
+    model = train_model(model, dataloader, criterion, optimizer)
+    model_int8 = torch.quantization.quantize_dynamic(
+        model,  # the original model
+        {torch.nn.Linear},  # a set of layers to dynamically quantize
+        dtype=torch.qint8)
 
 
