@@ -30,14 +30,14 @@ class MLP(nn.Module):
 
         return prediction
 
-class CNN(nn.Module):
+class CNN2d(nn.Module):
 
     def __init__(self):
-        super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(1, 3, kernel_size=(2, 5))
-        self.conv2 = nn.Conv2d(3, 9, kernel_size=(2, 5))
+        super(CNN2d, self).__init__()
+        self.conv1 = nn.Conv2d(1, 9, kernel_size=(2, 5))
+        self.conv2 = nn.Conv2d(9, 27, kernel_size=(2, 5))
         # self.conv3 = nn.Conv2d(6, 9, kernel_size=(1, 5))
-        self.pool1 = nn.MaxPool2d(2, 2)
+        self.pool1 = nn.MaxPool2d(3, 3)
         # self.fc1 = nn.Linear(1000, 120)
         self.out_layer = nn.Linear(1080, 12)
 
@@ -50,6 +50,28 @@ class CNN(nn.Module):
         x = self.pool1(torch.relu(x))
         x = x.reshape(x.size()[0], -1)
         # x = self.fc1(x)
+        # x = torch.relu(x)
+        x = self.out_layer(x)
+        return x
+
+class CNN(nn.Module):
+
+    def __init__(self):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv1d(6, 12, kernel_size=5)
+        self.conv2 = nn.Conv1d(12, 18, kernel_size=5)
+        self.conv3 = nn.Conv1d(18, 24, kernel_size=5)
+        self.pool2 = nn.MaxPool1d(3, stride=1)
+        self.out_layer = nn.Linear(1200, 12)
+
+    def forward(self, x):
+        x = self.conv1(x)
         x = torch.relu(x)
+        x = self.conv2(x)
+        # x = self.pool1(torch.relu(x))
+        x = self.conv3(x)
+        x = torch.relu(x)
+        x = self.pool2(x)
+        x = x.reshape(x.size()[0], -1)
         x = self.out_layer(x)
         return x

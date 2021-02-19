@@ -10,15 +10,15 @@ import config as config
 class RawDataset(Dataset):
 
     def __init__(self):
-        self.dataframe = pd.read_csv("./Data/RawExtract/windowed_raw.csv", index_col=0)
+        self.dataframe = pd.read_csv(config.raw_data_path, index_col=0)
 
     def __len__(self):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
         features_img = self.dataframe.iloc[idx, :-1].to_numpy()
-        features_img = features_img.reshape(6, 128).astype('float32')
-        features_img = np.expand_dims(features_img, axis=0)
+        features_img = features_img.reshape(config.input_size, order='F').astype('float32')
+        # features_img = np.expand_dims(features_img, axis=0)
         action = int(self.dataframe.loc[idx, 'label']) - 1
         sample = {'features': features_img, 'action': action}
         return sample

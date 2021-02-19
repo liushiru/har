@@ -10,7 +10,7 @@ import config
 from torch.utils.data import Subset, DataLoader
 from captum.attr import FeaturePermutation
 
-from model import MLP, CNN
+from model import MLP, CNN2d, CNN
 from preprocess import FeatureDataset, RawDataset
 
 
@@ -69,8 +69,9 @@ def train_model(model, dataloader, criterion, optimizer):
                         total += labels.size(0)
                         correct += (predicted == labels).sum().item()
 
-                print(dataset_name + 'Accuracy: %d %%' % (
+                print(dataset_name + 'Accuracy: %.2f' % (
                         100 * correct / total))
+                torch.save(model.state_dict(), config.cnn_model_path)
     return model
 
 
@@ -90,7 +91,16 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     model = train_model(model, dataloader, criterion, optimizer)
 
-    torch.save(model.state_dict(), config.mlp_model_path)
+    torch.save(model.state_dict(), config.cnn_model_path)
+
+    model = torch.load(config.mlp_model_path)
+
+    feature_perm = FeaturePermutation(model)
+    for data in dataloader['train']:
+        inputs = data['features']
+        labels = data['action']
+        attr = feature_perm.attribute(inputs, target=labels)
+
 
 
 
