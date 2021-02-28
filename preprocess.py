@@ -11,12 +11,24 @@ class RawDataset(Dataset):
 
     def __init__(self):
         self.dataframe = pd.read_csv(config.raw_data_path, index_col=0)
+        # self.get_first_300()
+        self.signal_frame = self.dataframe.iloc[:, :(0-config.num_label_cols)]
 
     def __len__(self):
         return len(self.dataframe)
 
+    def get_first_300(self):
+        result = pd.DataFrame()
+
+        for user in range(1, 30):
+            user_dataframe = self.dataframe[self.dataframe['user_id'] == user]
+            user_dataframe = user_dataframe.sample(n=300)
+            result = pd.concat((result, user_dataframe))
+        self.dataframe = result.reset_index(drop=True)
+
+
     def __getitem__(self, idx):
-        features_img = self.dataframe.iloc[idx, :-1].to_numpy()
+        features_img = self.signal_frame.iloc[idx, :].to_numpy()
         features_img = features_img.reshape(config.input_size, order='F').astype('float32')
         # features_img = np.expand_dims(features_img, axis=0)
         action = int(self.dataframe.loc[idx, 'label']) - 1
@@ -48,11 +60,15 @@ class FeatureDataset(Dataset):
 
         self.root_dir = root_dir
 
+    
+
     def __len__(self):
         return len(self.features)
 
     def __getitem__(self, idx):
-        features = self.features.iloc[idx, :].to_numpy().astype('float32')
+        features = self.features.iloc[idx, :].to_numpy().astype('float16')
+        features = features.astype('float32')
+
         action = self.labels.iloc[idx].item()-1
         sample = {'features': features, 'action': action}
         return sample
