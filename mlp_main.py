@@ -38,64 +38,64 @@ from preprocess import FeatureDataset
 
 #
 #
-# def train_model(model, dataloader, criterion, optimizer):
-#
-#     # best_model_wts = copy.deepcopy(model.state_dict())
-#     best_loss = float('inf')
-#
-#     for epoch in range(1, config.epochs+1):
-#
-#         print('Epoch {}/{}'.format(epoch, config.epochs))
-#         print('-' * 10)
-#
-#         for phase in ['train', 'val']:
-#             if phase == 'train':
-#                 model.train()
-#             else:
-#                 model.eval()
-#
-#             running_loss = 0.0
-#
-#             for data in dataloader[phase]:
-#                 inputs = data['features']
-#                 labels = data['action']
-#
-#                 optimizer.zero_grad()
-#
-#                 with torch.set_grad_enabled(phase == 'train'):
-#                     outputs = model(inputs)
-#                     loss = criterion(outputs, labels)
-#
-#                 if phase == 'train':
-#                     loss.backward()
-#                     optimizer.step()
-#
-#             running_loss += loss.item() * inputs.size(0)
-#
-#         epoch_loss = running_loss / len(dataloader[phase].dataset)
-#         print('{} Loss: {:.4f}'.format(phase, epoch_loss))
-#
-#         if phase == 'val' and epoch_loss < best_loss:
-#             best_loss = epoch_loss
-#             # best_model_wts = copy.deepcopy(model.state_dict())
-#
-#
-#         if phase == 'val':
-#             for dataset_name in ['train', 'val']:
-#                 correct = 0
-#                 total = 0
-#                 with torch.no_grad():
-#                     for data in dataloader[dataset_name]:
-#                         inputs = data['features']
-#                         labels = data['action']
-#                         outputs = model(inputs)
-#                         _, predicted = torch.max(outputs.data, 1)
-#                         total += labels.size(0)
-#                         correct += (predicted == labels).sum().item()
-#
-#                 print(dataset_name + 'Accuracy: %.2f' % (
-#                         100 * correct / total))
-#     return model
+def train_model(model, dataloader, criterion, optimizer):
+
+    # best_model_wts = copy.deepcopy(model.state_dict())
+    best_loss = float('inf')
+
+    for epoch in range(1, config.epochs+1):
+
+        print('Epoch {}/{}'.format(epoch, config.epochs))
+        print('-' * 10)
+
+        for phase in ['train', 'val']:
+            if phase == 'train':
+                model.train()
+            else:
+                model.eval()
+
+            running_loss = 0.0
+
+            for data in dataloader[phase]:
+                inputs = data['features']
+                labels = data['action']
+
+                optimizer.zero_grad()
+
+                with torch.set_grad_enabled(phase == 'train'):
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
+
+                if phase == 'train':
+                    loss.backward()
+                    optimizer.step()
+
+                running_loss += loss.item() * inputs.size(0)
+
+        epoch_loss = running_loss / len(dataloader[phase].dataset)
+        print('{} Loss: {:.4f}'.format(phase, epoch_loss))
+
+        if phase == 'val' and epoch_loss < best_loss:
+            best_loss = epoch_loss
+            # best_model_wts = copy.deepcopy(model.state_dict())
+
+
+        if phase == 'val':
+            for dataset_name in ['train', 'val']:
+                correct = 0
+                total = 0
+                with torch.no_grad():
+                    for data in dataloader[dataset_name]:
+                        inputs = data['features']
+                        labels = data['action']
+                        outputs = model(inputs)
+                        _, predicted = torch.max(outputs.data, 1)
+                        total += labels.size(0)
+                        correct += (predicted == labels).sum().item()
+
+                print(dataset_name + 'Accuracy: %.2f' % (
+                        100 * correct / total))
+    return model
 
 
 if __name__ == "__main__":

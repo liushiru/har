@@ -7,6 +7,7 @@ import numpy as np
 class MLP(nn.Module):
     def __init__(self):
         super(MLP, self).__init__()
+        self.name = 'MLP'
         self.fc1 = nn.Linear(561, 561)
         self.fc2 = nn.Linear(561, 512)
         # self.dropout = nn.Dropout(p=0.2)
@@ -34,6 +35,7 @@ class CNN2d(nn.Module):
 
     def __init__(self):
         super(CNN2d, self).__init__()
+
         self.conv1 = nn.Conv2d(1, 9, kernel_size=(2, 5))
         self.conv2 = nn.Conv2d(9, 27, kernel_size=(2, 5))
         # self.conv3 = nn.Conv2d(6, 9, kernel_size=(1, 5))
@@ -58,6 +60,7 @@ class CNN(nn.Module):
 
     def __init__(self):
         super(CNN, self).__init__()
+        self.name = 'CNN'
         self.conv1 = nn.Conv1d(6, 12, kernel_size=5)
         self.conv2 = nn.Conv1d(12, 18, kernel_size=5)
         self.conv3 = nn.Conv1d(18, 24, kernel_size=5)
