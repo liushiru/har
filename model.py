@@ -62,10 +62,10 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.name = 'CNN'
         self.conv1 = nn.Conv1d(6, 12, kernel_size=5)
-        self.conv2 = nn.Conv1d(12, 18, kernel_size=5)
-        self.conv3 = nn.Conv1d(18, 24, kernel_size=5)
-        self.pool2 = nn.MaxPool1d(3, stride=1)
-        self.out_layer = nn.Linear(1200, 12)
+        self.conv2 = nn.Conv1d(12, 24, kernel_size=5)
+        self.conv3 = nn.Conv1d(24, 48, kernel_size=5)
+        self.pool2 = nn.MaxPool1d(5, stride=1)
+        self.out_layer = nn.Linear(2304, 12)
 
     def forward(self, x):
         x = self.conv1(x)

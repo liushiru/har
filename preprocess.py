@@ -94,17 +94,36 @@ class FeatureDataset(Dataset):
     def get_shuffled_dataset(self):
         x_df = pd.concat((self.train_x, self.test_x))
         y_df = pd.concat((self.train_y, self.test_y))
+        x_df.columns = self.features_names
+        x_df = x_df.filter(regex='(?=.*(STD|Min|Max|Mean|IQR|Correlation|ARCoeff))^(tGravityAcc-|tBodyGyro-|tBodyAcc-)', axis=1)
         shuffle = pd.concat((x_df, y_df), axis=1).sample(frac=1)
         total_len = shuffle.shape[0]
         train_len = int(total_len * (1 - config.val_split))
         val_len = total_len - train_len
 
         train_x = shuffle.iloc[:train_len-1, :-1].to_numpy()
-        train_y = shuffle.iloc[:train_len-1, 561:].to_numpy().flatten()
+        train_y = shuffle.iloc[:train_len-1, -1:].to_numpy().flatten()
         test_x = shuffle.iloc[train_len:, :-1].to_numpy()
-        test_y = shuffle.iloc[train_len:, 561:].to_numpy().flatten()
+        test_y = shuffle.iloc[train_len:, -1:].to_numpy().flatten()
 
         return train_x, train_y, test_x, test_y
+
+
+    def get_data_input(self):
+
+        x_df = pd.concat((self.train_x, self.test_x))
+        y_df = pd.concat((self.train_y, self.test_y))
+        x_df.columns = self.features_names
+        # x_df = x_df.filter(regex='(?=.*(STD|Min|Max|Mean|IQR|Correlation|ARCoeff))^(tGravityAcc-|tBodyGyro-|tBodyAcc-)',
+        #                    axis=1)
+        x_df = x_df.filter(regex='^t',
+                           axis=1)
+        shuffle = pd.concat((x_df, y_df), axis=1).sample(frac=1)
+        X = shuffle.iloc[:, :-1].to_numpy()
+        y = shuffle.iloc[:, -1:].to_numpy().flatten()
+        return X, y
+
+
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

@@ -1,7 +1,7 @@
 import os
 import torch
-epochs = 120
-batch_size = 64
+epochs = 80
+batch_size = 128
 learning_rate = 0.0001
 val_split = 0.2
 
@@ -24,7 +24,8 @@ input_size = (6,64)
 
 num_label_cols = 2
 
-num_users = 5
+K = 5
 
 confusion_matrix_path = os.path.join('Data', 'ConfusionMatrix', 'matrix.csv')
+confusion_matrix_trad_path = os.path.join('Data', 'ConfusionMatrix', 'matrix_trad.csv')
 

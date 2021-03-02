@@ -31,20 +31,20 @@ def split_dataset(dataset):
 
 def k_fold_eval(dataset):
 
-    min_acc = float('inf')
+    max_acc = float('-inf')
     accuracy = AverageMeter()
     loss = AverageMeter()
 
-    dummy_x = dataset.dataframe[['user_id']].to_numpy()
+    dummy_x = dataset.dataframe[['label']].to_numpy()
     dummy_y = dummy_x.flatten()
 
-    skf = StratifiedKFold(n_splits=config.num_users)
+    skf = StratifiedKFold(n_splits=config.K)
     skf.get_n_splits(dummy_x, dummy_y)
 
     count = 0
     for train_index, val_index in skf.split(dummy_x, dummy_y):
         count += 1
-        print('K iteration {}/{}'.format(count, config.num_users))
+        print('K iteration {}/{}'.format(count, config.K))
         dataloaders = get_dataloaders(dataset, train_index, val_index)
 
         model = CNN()
@@ -57,13 +57,13 @@ def k_fold_eval(dataset):
         accuracy.update(best_acc, 1)
         loss.update(best_loss, 1)
 
-        if best_acc < min_acc:
+        if best_acc > max_acc:
             torch.save(model.state_dict(), config.cnn_model_path)
             get_confusion_matrix(best_model, dataloaders, save=True)
 
     print("K fold eval: acc: {}, loss: {}".format(accuracy, loss))
 
-    acc_df = pd.DataFrame({'Acc': accuracy.val},index=['acc']).to_csv(config.confusion_matrix_path, mode='a')
+    acc_df = pd.DataFrame({'Acc': accuracy.avg},index=['acc']).to_csv(config.confusion_matrix_path, mode='a')
     return accuracy.val, loss.val
 
 
@@ -94,7 +94,7 @@ def get_confusion_matrix(model, dataloader, save=True):
 
     cm = sklearn.metrics.confusion_matrix(test_y, prediction)
     if save:
-        pd.DataFrame(cm, index=np.arange(cm.shape[1]), columns=np.arange(cm.shape[0])).to_csv(config.confusion_matrix_path)
+        pd.DataFrame(cm, index=np.arange(cm.shape[1]), columns=np.arange(cm.shape[0])).to_csv(config.confusion_matrix_path, mode='a')
         # cm.to_csv(config.confusion_matrix_path)
 
     return cm
