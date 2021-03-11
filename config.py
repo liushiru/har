@@ -1,5 +1,6 @@
 import os
-import torch
+
+fs = 40
 epochs = 80
 batch_size = 128
 learning_rate = 0.0001
@@ -8,6 +9,7 @@ val_split = 0.2
 num_neighbors = 12
 mlp_model_path = os.path.join('Models', 'mlp.h5')
 cnn_model_path = os.path.join('Models', 'cnn.h5')
+svm_model_path = os.path.join('Models', 'svm.p')
 model_path = os.path.join('Models', 'mlp.h5')
 
 

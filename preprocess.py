@@ -44,7 +44,7 @@ class FeatureDataset(Dataset):
     test_y_path = os.path.join('Data', 'Test', 'Y_test.txt')
     feature_names_path = os.path.join('Data', 'features.txt')
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir=None):
 
         self.features_names = pd.read_csv(self.feature_names_path, names=['feature_names']).to_numpy().flatten()
         self.train_x = pd.read_csv(self.train_x_path, delim_whitespace=True, names=np.arange(561))
@@ -114,15 +114,12 @@ class FeatureDataset(Dataset):
         x_df = pd.concat((self.train_x, self.test_x))
         y_df = pd.concat((self.train_y, self.test_y))
         x_df.columns = self.features_names
-        # x_df = x_df.filter(regex='(?=.*(STD|Min|Max|Mean|IQR|Correlation|ARCoeff))^(tGravityAcc-|tBodyGyro-|tBodyAcc-)',
-        #                    axis=1)
-        x_df = x_df.filter(regex='^t',
+        x_df = x_df.filter(regex='(?=.*(STD|Min|Max|Mean|IQR|Correlation|ARCoeff))^(tGravityAcc-|tBodyGyro-|tBodyAcc-)',
                            axis=1)
         shuffle = pd.concat((x_df, y_df), axis=1).sample(frac=1)
         X = shuffle.iloc[:, :-1].to_numpy()
         y = shuffle.iloc[:, -1:].to_numpy().flatten()
         return X, y
-
 
 
 class AverageMeter(object):

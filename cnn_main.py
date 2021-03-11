@@ -67,7 +67,11 @@ def k_fold_eval(dataset):
     return accuracy.val, loss.val
 
 
-def get_dataloaders(dataset, train_index, val_index):
+def get_dataloaders(dataset, train_index=None, val_index=None):
+    if not train_index and not val_index:
+        return DataLoader(dataset, batch_size=config.batch_size,
+                                   shuffle=True, num_workers=4)
+
     datasets = {}
     datasets['train'] = Subset(dataset, train_index)
     datasets['val'] = Subset(dataset, val_index)

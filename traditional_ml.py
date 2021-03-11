@@ -1,3 +1,4 @@
+import pickle
 import pandas as pd
 import numpy as np
 from sklearn.inspection import permutation_importance
@@ -47,6 +48,7 @@ def k_fold_eval():
         if acc > best_acc:
             best_acc = acc
             get_confusion_matrix(model, X_val, y_val)
+            pickle.dump(model, open(config.svm_model_path, "wb"))
     pd.DataFrame({'SVM Acc(partial features)': accuracy.avg}, index=['acc']).to_csv(config.confusion_matrix_trad_path, mode='a')
 
     return accuracy.val
