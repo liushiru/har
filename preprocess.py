@@ -38,7 +38,7 @@ class RawDataset(Dataset):
 
 
 class FeatureDataset(Dataset):
-    train_x_path = os.path.join('Data', 'Train', 'X_train.txt')
+    train_x_path = os.path.join('Data', 'RawExtract', 'X_train.txt')
     train_y_path = os.path.join('Data', 'Train', 'Y_train.txt')
     test_x_path = os.path.join('Data', 'Test', 'X_test.txt')
     test_y_path = os.path.join('Data', 'Test', 'Y_test.txt')
