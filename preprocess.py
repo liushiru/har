@@ -38,38 +38,21 @@ class RawDataset(Dataset):
 
 
 class FeatureDataset(Dataset):
-    train_x_path = os.path.join('Data', 'RawExtract', 'X_train.txt')
-    train_y_path = os.path.join('Data', 'Train', 'Y_train.txt')
-    test_x_path = os.path.join('Data', 'Test', 'X_test.txt')
-    test_y_path = os.path.join('Data', 'Test', 'Y_test.txt')
-    feature_names_path = os.path.join('Data', 'features.txt')
-
     def __init__(self, root_dir=None):
 
-        self.features_names = pd.read_csv(self.feature_names_path, names=['feature_names']).to_numpy().flatten()
-        self.train_x = pd.read_csv(self.train_x_path, delim_whitespace=True, names=np.arange(561))
-        self.train_y = pd.read_csv(self.train_y_path, sep=" ", names=['label'])
-
-        self.train_num = len(self.train_x)
-        self.test_x = pd.read_csv(self.test_x_path, delim_whitespace=True, names=np.arange(561))
-        self.test_y = pd.read_csv(self.test_y_path, sep=" ", names=['label'])
-
-        self.features = pd.concat((self.train_x, self.test_x))
-        self.features.columns = self.features_names
-        self.labels = pd.concat((self.train_y, self.test_y))
-
-        self.root_dir = root_dir
+        self.dataframe = pd.read_csv('./Data/RawExtract/features.csv', index_col=0)
+        # self.dataframe = self.dataframe.iloc[4:5, :]
+        self.dataframe = self.dataframe.sample(frac=1)
 
     
 
     def __len__(self):
-        return len(self.features)
+        return len(self.dataframe)
 
     def __getitem__(self, idx):
-        features = self.features.iloc[idx, :].to_numpy().astype('float16')
-        features = features.astype('float32')
+        features = self.dataframe.iloc[idx, :-2].to_numpy().astype('float32')
 
-        action = self.labels.iloc[idx].item()-1
+        action = self.dataframe.iloc[idx, -1]-1
         sample = {'features': features, 'action': action}
         return sample
 
@@ -78,18 +61,6 @@ class FeatureDataset(Dataset):
         scaled_features = StandardScaler().fit_transform(df.values)
         self.features = pd.DataFrame(scaled_features, index=df.index, columns=df.columns)
 
-
-    def get_train_x(self):
-        return self.train_x.to_numpy()
-
-    def get_train_y(self):
-        return self.train_y.to_numpy().flatten()
-
-    def get_test_x(self):
-        return self.test_x.to_numpy()
-
-    def get_test_y(self):
-        return self.test_y.to_numpy().flatten()
 
     def get_shuffled_dataset(self):
         x_df = pd.concat((self.train_x, self.test_x))
@@ -110,6 +81,10 @@ class FeatureDataset(Dataset):
 
 
     def get_data_input(self):
+
+        X = self.dataframe.iloc[:, :-2].to_numpy()
+        y = self.dataframe.iloc[:,-1].to_numpy().flatten()
+        return X, y
 
         x_df = pd.concat((self.train_x, self.test_x))
         y_df = pd.concat((self.train_y, self.test_y))

@@ -16,28 +16,9 @@ from matplotlib.pyplot import plot
 from cnn_main import split_dataset, train_model, get_confusion_matrix, get_permutation_importance
 from model import MLP
 from preprocess import FeatureDataset
+from cnn_main import k_fold_eval
 
 
-# def split_dataset(dataset):
-#     train_len = dataset.train_num
-#     datasets = {}
-#     datasets['test'] = Subset(dataset, np.arange(train_len, len(dataset)))
-#
-#     remaining_data = Subset(dataset, np.arange(train_len))
-#
-#     train = int(train_len * (1 - config.val_split))
-#     val = train_len - train
-#     train_set, val_set = torch.utils.data.random_split(remaining_data,
-#                                                        [train, val])
-#
-#     datasets['train'] = train_set
-#     datasets['val'] = val_set
-#
-#     return datasets
-#
-
-#
-#
 def train_model(model, dataloader, criterion, optimizer):
 
     # best_model_wts = copy.deepcopy(model.state_dict())
@@ -99,6 +80,8 @@ def train_model(model, dataloader, criterion, optimizer):
 
 
 if __name__ == "__main__":
+
+
 #     dataset = FeatureDataset(root_dir="Data")
 #     datasets = split_dataset(dataset)
 #     dataloader = {}

@@ -4,8 +4,8 @@ from scipy.signal import butter
 from scipy.signal import sosfilt
 from scipy.stats import iqr
 from sklearn.preprocessing import MinMaxScaler
-
-
+from sklearn.preprocessing import StandardScaler
+import pickle
 
 import config
 
@@ -13,6 +13,10 @@ class FeaturesExtract():
 
     def __init__(self):
         self.raw_df = pd.read_csv('./Data/RawExtract/raw.csv', index_col=0)
+        self.scalar = pickle.load(open(config.scalar_path, 'rb'))
+
+    def detect_movement_start(self, packet):
+        pass
 
 
     def calculate_features(self, signals):
@@ -45,9 +49,11 @@ class FeaturesExtract():
     def single_datapoint_get_features(self, signals):
         signals = self.add_gravity_acc(signals)
         features = self.calculate_features(signals)
-        return features
+        features = self.scalar.transform([features])
+        return features[0]
 
     def get_features_df(self):
+
         df = self.raw_df
         col_name = [i for i in range(54)]
         features_list = np.empty((df.shape[0], 54))
@@ -62,7 +68,11 @@ class FeaturesExtract():
             dancers_id.append(df.iloc[i, -2])
             moves_id.append(df.iloc[i, -1])
 
-        normalized_features = MinMaxScaler().fit_transform(features_list)
+
+
+        scalar = StandardScaler()
+        normalized_features = scalar.fit_transform(features_list)
+        pickle.dump(scalar, open('./Data/RawExtract/scalar.pkl', 'wb'))
         feature_df = pd.DataFrame(normalized_features)
         feature_df['dancer'] = dancers_id
         feature_df['label'] = moves_id
@@ -71,16 +81,9 @@ class FeaturesExtract():
 
         feature_df.to_csv('./Data/RawExtract/features.csv')
 
-    def normalize(self, df):
-        x = df.values  # returns a numpy array
-        min_max_scaler = MinMaxScaler()
-        x_scaled = min_max_scaler.fit_transform(x)
-        df = pd.DataFrame(x_scaled)
-
-
-
 
 
 if __name__ == "__main__":
     fe = FeaturesExtract()
     fe.get_features_df()
+

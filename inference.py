@@ -6,26 +6,35 @@ from torch.utils.data import DataLoader
 
 import config
 from cnn_main import get_dataloaders
-from model import CNN
+from model import CNN, MLP
 from preprocess import RawDataset, FeatureDataset
 
 
 def cnn_inference():
-    model = CNN()
+    model = MLP()
     model.load_state_dict(torch.load(config.cnn_model_path))
     model.eval()
 
-    dataset = RawDataset()
+    dataset = FeatureDataset()
     dataloader = DataLoader(dataset, batch_size=1,
-                                     shuffle=True, num_workers=4)
+                                     shuffle=False, num_workers=4)
+
+    # dataloader_iterator = iter(dataloader)
+    # for i in range(len(dataset)):
+
+
 
     with torch.no_grad():
         for data in dataloader:
             inputs = data['features']
             labels = data['action']
             outputs = model(inputs)
-            probability_distribution = torch.nn.functional.softmax(outputs)
-            prediction = np.argmax(probability_distribution.detach().numpy())
+            out1 = model.fc1(inputs)
+            out1np = out1.detach().numpy()
+            out = torch.relu(out1)
+            o = model.out_layer(out)
+            # probability_distribution = torch.nn.functional.softmax(outputs)
+            prediction = np.argmax(outputs.detach().numpy())
             print('prediction of CNN model is {}'.format(prediction))
             print('label is {}'.format(labels.detach().numpy()[0]))
             print('----')
@@ -46,5 +55,5 @@ def svm_inference():
 
 if __name__ == "__main__":
 
-    # cnn_inference()
-    svm_inference()
+    cnn_inference()
+    # svm_inference()

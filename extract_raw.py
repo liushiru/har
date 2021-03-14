@@ -26,8 +26,9 @@ def extract_raw():
     collate_df = pd.DataFrame()
 
 
-    raw = []
+
     for file in raw_files:
+        raw = []
         info = os.path.basename(file).split('_')
         dancer_id = int(info[1])
         move_id = int(info[3])
@@ -46,7 +47,6 @@ def extract_raw():
         raw_df['dancer'] = dancer_id
         raw_df['label'] = move_id
         collate_df = collate_df.append(raw_df)
-        pass
 
     collate_df.to_csv('./Data/RawExtract/raw.csv')
     # labels = pd.read_csv('./Data/RawData/labels.txt', sep=" ", names=['exp_id', 'user_id', 'activity', 'start', 'end'])

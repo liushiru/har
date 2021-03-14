@@ -29,7 +29,7 @@ def split_dataset(dataset):
     return datasets
 
 
-def k_fold_eval(dataset):
+def k_fold_eval(dataset, model_name='CNN'):
 
     max_acc = float('-inf')
     accuracy = AverageMeter()
@@ -47,7 +47,14 @@ def k_fold_eval(dataset):
         print('K iteration {}/{}'.format(count, config.K))
         dataloaders = get_dataloaders(dataset, train_index, val_index)
 
-        model = CNN()
+
+
+        if model_name[:3] == 'CNN':
+            model = CNN()
+        if model_name[:3] == 'MLP':
+            model = MLP()
+        if model_name[-2:] == 'LD':
+            model.load_state_dict(torch.load(config.model_path))
 
         criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
@@ -58,17 +65,17 @@ def k_fold_eval(dataset):
         loss.update(best_loss, 1)
 
         if best_acc > max_acc:
-            torch.save(model.state_dict(), config.cnn_model_path)
+            torch.save(model.state_dict(), config.model_path)
             get_confusion_matrix(best_model, dataloaders, save=True)
 
     print("K fold eval: acc: {}, loss: {}".format(accuracy, loss))
 
-    acc_df = pd.DataFrame({'Acc': accuracy.avg},index=['acc']).to_csv(config.confusion_matrix_path, mode='a')
+    # acc_df = pd.DataFrame({'Acc': accuracy.avg},index=['acc']).to_csv(config.confusion_matrix_path, mode='a')
     return accuracy.val, loss.val
 
 
 def get_dataloaders(dataset, train_index=None, val_index=None):
-    if not train_index and not val_index:
+    if train_index is None:
         return DataLoader(dataset, batch_size=config.batch_size,
                                    shuffle=True, num_workers=4)
 
@@ -151,7 +158,7 @@ def train_model(model, dataloader, criterion, optimizer):
 
         if phase == 'val' and epoch_loss < best_loss:
             best_loss = epoch_loss
-            torch.save(model.state_dict(), config.cnn_model_path)
+            torch.save(model.state_dict(), config.model_path)
 
         if phase == 'val':
             for dataset_name in ['train', 'val']:
@@ -173,19 +180,37 @@ def train_model(model, dataloader, criterion, optimizer):
             best_acc = max(accuracy, best_acc)
 
 
-    model.load_state_dict(torch.load(config.cnn_model_path))
+    model.load_state_dict(torch.load(config.model_path))
     print(model)
     return model, best_loss, best_acc
 
 
 
+def load_model():
+    model = torch.load(config.model_path)
+
+    for key, val in model.items():
+        print(key)
+        # npy = val.detach().numpy()
+        # pass
+
+        filepath = os.path.join("Data", "ModelWeights", "{}.npy".format(key))
+        f = open(filepath, "w")
+        with open(filepath, 'wb') as f:
+            np.save(f, val.detach().numpy())
 
 
 
 if __name__ == "__main__":
-    dataset = RawDataset()
 
-    k_fold_eval(dataset)
+    load_model()
+
+    if config.model_name[:3] == 'CNN':
+        dataset = RawDataset()
+    if config.model_name[:3] == 'MLP':
+        dataset = FeatureDataset()
+
+    k_fold_eval(dataset, config.model_name)
 
     model = CNN()
 
