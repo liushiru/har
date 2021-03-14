@@ -6,6 +6,7 @@ from scipy.stats import iqr
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import pickle
+import os
 
 import config
 
@@ -13,7 +14,7 @@ class FeaturesExtract():
 
     def __init__(self):
         self.raw_df = pd.read_csv('./Data/RawExtract/raw.csv', index_col=0)
-        self.scalar = pickle.load(open(config.scalar_path, 'rb'))
+        # self.scalar = pickle.load(open(config.scalar_path, 'rb'))
 
     def detect_movement_start(self, packet):
         pass
@@ -49,8 +50,8 @@ class FeaturesExtract():
     def single_datapoint_get_features(self, signals):
         signals = self.add_gravity_acc(signals)
         features = self.calculate_features(signals)
-        features = self.scalar.transform([features])
-        return features[0]
+        # features = self.scalar.transform([features])
+        return features
 
     def get_features_df(self):
 
@@ -70,20 +71,36 @@ class FeaturesExtract():
 
 
 
-        scalar = StandardScaler()
-        normalized_features = scalar.fit_transform(features_list)
-        pickle.dump(scalar, open('./Data/RawExtract/scalar.pkl', 'wb'))
+        scaler = StandardScaler()
+        normalized_features = scaler.fit_transform(features_list)
+        pickle.dump(scaler, open('./Data/RawExtract/scaler.pkl', 'wb'))
+        self.save_scaler_npy(scaler)
+
         feature_df = pd.DataFrame(normalized_features)
         feature_df['dancer'] = dancers_id
         feature_df['label'] = moves_id
 
 
-
         feature_df.to_csv('./Data/RawExtract/features.csv')
 
+    def save_scaler_npy(self, scaler):
+        print(scaler.mean_)
+        print(scaler.scale_)
+        f_mean = './Data/RawExtract/scaler_mean.npy'
+        with open(f_mean, 'wb') as f:
+            np.save(f, scaler.mean_)
+        f_std = './Data/RawExtract/scaler_std.npy'
+        with open(f_std, 'wb') as f:
+            np.save(f, scaler.scale_)
 
 
 if __name__ == "__main__":
     fe = FeaturesExtract()
     fe.get_features_df()
+
+
+
+
+
+
 
