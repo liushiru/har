@@ -2,9 +2,15 @@ import pandas as pd
 import numpy as np
 import os
 import glob
+from matplotlib.pyplot import plot
+import matplotlib.pyplot as plt
+from sklearn.cluster import k_means
+from sklearn.cluster import DBSCAN
+
 
 import config
-
+import scipy.signal as ss
+import collections
 
 
 
@@ -20,12 +26,31 @@ def get_window_array(df, start):
     return array
 
 
+def combine_hand_hip():
+    for dancer_id in [4, 5]:
+        for move_id in range(config.num_moves):
+            comb_df = pd.DataFrame()
+            for imu_id in ["hand", "hip"]:
+                filepath = get_file_name(dancer_id, move_id, imu_id)
+                df = pd.read_csv(filepath, header=None, usecols=np.arange(7))
+                df = df.iloc[:, :6]
+                # if imu_id == "hand":
+                #     for i in range(6):
+                #         df[i] = 0
+                comb_df = pd.concat((comb_df, df), axis=1)
+            comb_df.to_csv(get_file_name(dancer_id, move_id, "comb"), index=False, header=False)
+
+
+def pipe_data():
+    combine_hand_hip()
+    extract_raw()
+
+
+
 def extract_raw():
-    raw_files = glob.glob("./Data/RawData/*.csv")
+    raw_files = glob.glob("./Data/RawData/*comb.csv")
 
     collate_df = pd.DataFrame()
-
-
 
     for file in raw_files:
         raw = []
@@ -34,7 +59,7 @@ def extract_raw():
         move_id = int(info[3])
         imu_id = info[4]
 
-        file_df = pd.read_csv(file, usecols=np.arange(6))
+        file_df = pd.read_csv(file, header=None, usecols=np.arange(config.num_axis))
         total_len = file_df.shape[0]
         num_win = (total_len // (config.wl //2)) - 1
 
@@ -43,7 +68,7 @@ def extract_raw():
             win_arr = get_window_array(file_df, win_start)
             raw.append(win_arr)
 
-        raw_df = pd.DataFrame(raw, columns=np.arange(config.wl * 6))
+        raw_df = pd.DataFrame(raw, columns=np.arange(config.wl * config.num_axis))
         raw_df['dancer'] = dancer_id
         raw_df['label'] = move_id
         collate_df = collate_df.append(raw_df)
@@ -99,9 +124,170 @@ def down_sample():
     down.to_csv('./Data/RawExtract/raw_25hz_id.csv')
 
 
+
+def plot_data():
+    df = pd.read_csv('Data/RawData/dancer_5_pos_1_hand_2.csv')
+
+    df2 = pd.read_csv('Data/RawData/dancer_5_pos_2_hand.csv')
+
+    plot(df.iloc[:, 0].to_numpy(), label= 'acc_x_hand')
+    plot(df.iloc[:, 1].to_numpy(), label='acc_y_hand')
+    plot(df.iloc[:, 2].to_numpy(), label='acc_z_hand')
+    plot(df.iloc[:, 3].to_numpy(), label='gy_x_hand')
+    plot(df.iloc[:, 4].to_numpy(), label='gy_y_hand')
+    plot(df.iloc[:, 5].to_numpy(), label='gy_z_hand')
+
+    plt.show()
+    plt.legend()
+    plot(df2.iloc[:, 0].to_numpy(), label='acc_x_hip')
+    plot(df2.iloc[:, 1].to_numpy(), label = 'acc_y_hip')
+    plot(df2.iloc[:, 2].to_numpy(), label='acc_z_hip')
+    plot(df2.iloc[:, 3].to_numpy())
+    plot(df2.iloc[:, 4].to_numpy())
+    plot(df2.iloc[:, 5].to_numpy())
+
+
+def get_velocity(left):
+    cs = []
+    cum_sum = 0
+    i = 0
+    stop_time = 4
+    while i < (len(left) - stop_time):
+        if np.mean(np.abs(left[i: i + stop_time])) < 200:
+            print(i)
+            cum_sum = 0
+            cs.extend([0 for _ in range(stop_time)])
+            i += stop_time
+        cum_sum += left[i]
+        cs.append(cum_sum)
+        i+=1
+    return cs
+
+from sklearn.cluster import DBSCAN
+from scipy.stats import mode
+def sync_delay_v1(signal1, signal2):
+    # signal12 are numpy array
+    # make use of the time difference between the maximum and minimum point in a window
+    # return delay in second
+    l = []
+    for i in range(6):
+        l.append(signal1[i].argmax() - signal2[i].argmax())
+        l.append(signal1[i].argmin() - signal2[i].argmin())
+    c = np.array(l)
+    clustering = DBSCAN(eps=3, min_samples=4).fit(c.reshape(-1, 1)).labels_
+    if sum(clustering != -1) == 0:
+        return np.mean(l)
+    c = c[clustering != -1]
+    clustering = clustering[clustering != -1]
+    mode_cluster = mode(clustering)[0]
+    c = c[(clustering == mode_cluster)]
+    return c.mean() * 0.05
+
+def is_hand_side_by_side(signal):
+    # Jason's implementation
+    pass
+
+def sync_delay_v2(signal):
+    # return motion start
+    start_time = None
+    for i in range(29, -1, -1):
+        prev = signal[:, i-1]
+        curr = signal[:, i]
+        if is_hand_side_by_side(prev) and not is_hand_side_by_side(curr):
+            start_time = i
+            break
+    return start_time
+
+def sync_delay_v3(signal):
+    # use ml prediction resolution, increase window overlap to 93%
+    pass
+
+def sync_delay_v3(signal):
+    # Jeremy's implementation which I didn't really get. can test out tmr
+    pass
+
+
+
+
 if __name__ == "__main__":
-    extract_raw()
-    # down_sample()
+    # pipe_data()
+    # extract_raw()
+    # combine_hand_hip()
+
+    df1 = pd.read_csv('./Data/RawData/movement_data/dancer_4_pos1_hip.csv', header=None, usecols=np.arange(6))
+    df2 = pd.read_csv('./Data/RawData/movement_data/dancer_4_pos2_hip.csv', header=None, usecols=np.arange(6))
+    # acc_x = df[0]
+    # acc_y = df[1]
+    # acc_z = df[2]
+    # gy_x = df[2]
+    # gy_y = df[2]
+    # gy_z = df[2]
+
+    for i in range(0, len(df2) - 30, 15):
+
+        signal1 = df1.iloc[i: i+30, :].to_numpy().T
+        signal2 = df2.iloc[i: i+30, :].to_numpy().T
+        delay = sync_delay_v1(signal1, signal2)
+        print(delay)
+        fig, axs = plt.subplots(2)
+        for sig in [signal1, signal2]:
+            for j in range(6):
+                axs[0].plot(signal1[j])
+                axs[1].plot(signal2[j])
+        plt.show()
+        plt.close()
+
+        # plt.clf()
+        # l = []
+        # m = []
+        # d = {}
+        # for j in range(6):
+        #     diff = df1[j][i:i + 30].max() - df2[j][i:i + 30].min()
+        #     d[diff] = [df1[j][i:i + 30].to_numpy(), df2[j][i:i + 30].to_numpy(), j]
+        # # od = collections.OrderedDict(sorted(d.items(), reverse=True))
+        #
+        #
+        # # for j in range(6):
+        # #     l.append(df1[j][i+10:i + 30+10].to_numpy().argmax() - df2[j][i:i + 30].to_numpy().argmax())
+        # #     m.append(df1[j][i+10:i + 30+10].to_numpy().argmin() - df2[j][i:i + 30].to_numpy().argmin())
+        # for key in sorted(d, reverse=True)[:]:
+        #     l1 = d[key][0]
+        #     l2 = d[key][1]
+        #     print(d[key][2])
+        #     l.append(l1.argmax() - l2.argmax())
+        #     m.append(l1.argmin() - l2.argmin())
+        #
+        # fig, axs = plt.subplots(3)
+        # c = np.array(l+m)
+        # # plt.figure(i+3)
+        # # axs[0].plot(c, np.zeros(len(c)), '.')
+        # clustering = DBSCAN(eps=3, min_samples=4).fit(c.reshape(-1,1))
+        #
+        # cluster = np.unique(clustering.labels_)
+        # for clu in np.unique(clustering.labels_):
+        #     curr = c[clustering.labels_ == clu]
+        #     axs[0].plot(curr, np.zeros(len(curr)), '.', label=clu)
+        #     axs[0].legend()
+        #     # plt.show()
+
+
+
+        # print(l)
+        # print(m)
+        # print(i,'----------------------------------')
+
+        # plt.figure(i)
+    #     for k in range(6):
+    #         axs[1].plot(df1[k][i:i+30].to_numpy())
+    #     # plt.show()
+    #     # plt.figure(i+1)
+    #     for k in range(6):
+    #         axs[2].plot(df2[k][i:i+30].to_numpy())
+    #     plt.show()
+    #     plt.close()
+    #     pass
+    # pass
+
 
 
 

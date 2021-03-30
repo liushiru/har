@@ -51,8 +51,9 @@ class FeatureDataset(Dataset):
 
     def __getitem__(self, idx):
         features = self.dataframe.iloc[idx, :-2].to_numpy().astype('float32')
+        features[:42] = 0
 
-        action = self.dataframe.iloc[idx, -1]-1
+        action = self.dataframe.iloc[idx, -1]
         sample = {'features': features, 'action': action}
         return sample
 

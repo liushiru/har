@@ -47,8 +47,6 @@ def k_fold_eval(dataset, model_name='CNN'):
         print('K iteration {}/{}'.format(count, config.K))
         dataloaders = get_dataloaders(dataset, train_index, val_index)
 
-
-
         if model_name[:3] == 'CNN':
             model = CNN()
         if model_name[:3] == 'MLP':
@@ -65,6 +63,7 @@ def k_fold_eval(dataset, model_name='CNN'):
         loss.update(best_loss, 1)
 
         if best_acc > max_acc:
+            max_acc = best_acc
             torch.save(model.state_dict(), config.model_path)
             get_confusion_matrix(best_model, dataloaders, save=True)
 
@@ -107,7 +106,7 @@ def get_confusion_matrix(model, dataloader, save=True):
     if save:
         pd.DataFrame(cm, index=np.arange(cm.shape[1]), columns=np.arange(cm.shape[0])).to_csv(config.confusion_matrix_path, mode='a')
         # cm.to_csv(config.confusion_matrix_path)
-
+    print(cm)
     return cm
 
 def get_permutation_importance():
@@ -159,6 +158,7 @@ def train_model(model, dataloader, criterion, optimizer):
         if phase == 'val' and epoch_loss < best_loss:
             best_loss = epoch_loss
             torch.save(model.state_dict(), config.model_path)
+            get_confusion_matrix(model, dataloader)
 
         if phase == 'val':
             for dataset_name in ['train', 'val']:
@@ -194,7 +194,7 @@ def load_model():
         # npy = val.detach().numpy()
         # pass
 
-        filepath = os.path.join("Data", "ModelWeights", "{}.npy".format(key))
+        filepath = os.path.join("Data", "RawExtract", "{}.npy".format(key))
         f = open(filepath, "w")
         with open(filepath, 'wb') as f:
             np.save(f, val.detach().numpy())
